@@ -1,13 +1,16 @@
 from flask import Flask, jsonify, request
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+from flask_cors import CORS, cross_origin
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 from flask_sqlalchemy import SQLAlchemy
 from datetime import timedelta
 
 app = Flask(__name__)
+cors = CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:password@localhost/samviddhi'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'acs17%^&81bja()'
 app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=1800)
+app.config['CORS_HEADER'] = 'Content-Type'
 jwt = JWTManager(app)
 db = SQLAlchemy(app)
 
@@ -25,11 +28,13 @@ class TA(db.Model):
 
 
 @app.route('/')
+@cross_origin()
 def index():
     return 'Hello, From Samviddhi!'
 
 
 @app.route('/login', methods=['POST'])
+@cross_origin()
 def login():
     username = request.json.get('username')
     password = request.json.get('password')
@@ -43,6 +48,7 @@ def login():
 
 @app.route('/api/add', methods=['POST'])
 @jwt_required()
+@cross_origin()
 def add_ta():
     try:
         data = request.get_json()
@@ -62,21 +68,21 @@ def add_ta():
     
 
 @app.route('/api/retrieve', methods=['POST'])
-@jwt_required()
+@cross_origin()
 def retrieve_ta():
     try:
         data = request.get_json()
         id = int(data['id'])
         ta_obj = TA.query.filter_by(id = id).all()[0]
         response = {"native_english_speaker" : ta_obj.native_english_speaker, "course_instructor" : ta_obj.course_instructor, "course" : ta_obj.course, "summer_or_regular" : ta_obj.summer_or_regular, "class_size" : ta_obj.class_size, "class_attribute" : ta_obj.class_attribute}
-        return jsonify({'message': 'success',  "response" : response}), 201
+        return jsonify({'message': 'success',  "data" : [response]}), 201
     except Exception as e:
         return jsonify({'message': 'Failed to fetch TA data'}), 401
     
 
 
 @app.route('/api/retrieve-all', methods=['POST'])
-@jwt_required()
+@cross_origin()
 def retrieve_all_ta():
     try:
         ta_objs = TA.query.all()
@@ -91,6 +97,7 @@ def retrieve_all_ta():
     
 @app.route('/api/update', methods=['POST'])
 @jwt_required()
+@cross_origin()
 def update_ta():
     try:
         data = request.get_json()
@@ -119,6 +126,7 @@ def update_ta():
     
 @app.route('/api/delete', methods=['POST'])
 @jwt_required()
+@cross_origin()
 def delete_ta():
     try:
         data = request.get_json()
@@ -133,4 +141,4 @@ def delete_ta():
 
 
 if __name__ == '__main__':
-    app.run(debug=True,  host='127.0.0.1', port=5000)
+    app.run(debug=True,  host='192.168.1.103', port=5000)
