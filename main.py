@@ -33,6 +33,7 @@ def index():
 def login():
     username = request.json.get('username')
     password = request.json.get('password')
+    print(username, password)
     if username != 'admin' or password != 'password':
         return jsonify({'msg': 'Invalid credentials'}), 401
     access_token = create_access_token(identity=username)
